@@ -1,48 +1,78 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Dynamically update the current year in the footer
-    const currentYearSpan = document.getElementById('current-year');
-    if (currentYearSpan) {
-        currentYearSpan.textContent = new Date().getFullYear();
+    const loadComponent = (url, elementId) => {
+        fetch(url)
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById(elementId).innerHTML = data;
+                if (elementId === 'main-footer') {
+                    // After loading footer, update the year
+                    const currentYearSpan = document.getElementById('current-year');
+                    if (currentYearSpan) {
+                        currentYearSpan.textContent = new Date().getFullYear();
+                    }
+                }
+                if (elementId === 'main-header') {
+                    // After loading header, re-initialize smooth scrolling and active nav links
+                    initializeNav();
+                }
+            });
     }
 
-    // Smooth scrolling for navigation links
-    document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
+    loadComponent('header.html', 'main-header');
+    loadComponent('footer.html', 'main-footer');
 
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
+    const initializeNav = () => {
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a[href^="#"], nav a[href^="index.html#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href.startsWith('#') || href.startsWith('index.html#')) {
+                    const targetId = '#' + href.split('#')[1];
+                    // If on a different page, go to that page first
+                    if (!window.location.pathname.endsWith('index.html') && !window.location.pathname.endsWith('/')) {
+                        window.location.href = 'index.html' + targetId;
+                        return;
+                    }
 
-            if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
+                    e.preventDefault();
+                    const targetElement = document.querySelector(targetId);
+
+                    if (targetElement) {
+                        const navbarHeight = document.querySelector('.navbar').offsetHeight;
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
         });
-    });
 
-    // Initialize the carousel
-    const carousel = new bootstrap.Carousel(document.getElementById('portfolioCarousel'), {
-        interval: 5000, // Set a slower interval
-        wrap: true // Allow the carousel to loop
-    });
+        // Add active class to nav links on scroll (only for index.html)
+        if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
+            const sections = document.querySelectorAll('section');
+            const navLi = document.querySelectorAll('nav .navbar-nav .nav-item a');
 
-    // Scroll to top button
-    const scrollToTopBtn = document.getElementById('scroll-to-top');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (pageYOffset >= (sectionTop - sectionHeight / 3)) {
+                        current = section.getAttribute('id');
+                    }
+                })
 
-    window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 100) {
-            scrollToTopBtn.classList.add('visible');
-        } else {
-            scrollToTopBtn.classList.remove('visible');
+                navLi.forEach(a => {
+                    a.classList.remove('active');
+                    const href = a.getAttribute('href');
+                    if (href.includes(current)) {
+                        a.classList.add('active');
+                    }
+                })
+            });
         }
-    });
-
-    scrollToTopBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
+    }
 });
