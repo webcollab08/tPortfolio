@@ -4,22 +4,26 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.text())
             .then(data => {
                 document.getElementById(elementId).innerHTML = data;
-                if (elementId === 'main-footer') {
+                if (elementId === 'footer-placeholder') {
                     // After loading footer, update the year
                     const currentYearSpan = document.getElementById('current-year');
                     if (currentYearSpan) {
                         currentYearSpan.textContent = new Date().getFullYear();
                     }
                 }
-                if (elementId === 'main-header') {
+                if (elementId === 'header-placeholder') {
                     // After loading header, re-initialize smooth scrolling and active nav links
                     initializeNav();
                 }
             });
     }
 
-    loadComponent('header.html', 'main-header');
-    loadComponent('footer.html', 'main-footer');
+if (path_to_root === './') {
+        loadComponent(`${path_to_root}pbl/header_root.html`, 'header-placeholder');
+    } else {
+        loadComponent(`${path_to_root}pbl/header_pages.html`, 'header-placeholder');
+    }
+    loadComponent(`${path_to_root}pbl/footer.html`, 'footer-placeholder');
 
     const initializeNav = () => {
         // Smooth scrolling for navigation links
